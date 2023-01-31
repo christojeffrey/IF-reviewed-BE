@@ -1,11 +1,8 @@
-import getHello from "../controllers/hello";
+import { getNIM, getHello } from "../controllers";
 
 const app = require("express")();
 
-app.get("/api", (req: any, res: any) => {
-  res.end(`Hello world!`);
-});
-
-app.get("/api/hello", getHello);
+app.get("/api", getHello);
+app.get("/api/:NIM", getNIM);
 
 module.exports = app;
