@@ -12,27 +12,14 @@ export default async function getSearch(req: any, res: any) {
 
   const usersRef = db.collection("users");
   //   get any user with name or NIM that contains searchQuery
-  const snapshot = await usersRef
-    .where("name", ">=", searchQuery)
-    .where("name", "<=", searchQuery + "\uf8ff")
-    .get();
-
-  const snapshot2 = await usersRef
-    .where("NIM", ">=", searchQuery)
-    .where("NIM", "<=", searchQuery + "\uf8ff")
-    .get();
+  const snapshot = await usersRef.get();
 
   const respond: any = [];
   snapshot.forEach((doc: any) => {
-    console.log(doc.id, "=>", doc.data());
-    const toBePushed = doc.data();
-    respond.push(toBePushed);
-  });
-
-  snapshot2.forEach((doc: any) => {
-    console.log(doc.id, "=>", doc.data());
-    const toBePushed = doc.data();
-    respond.push(toBePushed);
+    //  filter. make in case insensitive
+    if (doc.data().name.toLowerCase().includes(searchQuery.toLowerCase()) || doc.data().NIM.toLowerCase().includes(searchQuery.toLowerCase())) {
+      respond.push(doc.data());
+    }
   });
 
   res.send(respond);

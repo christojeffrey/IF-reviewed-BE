@@ -18,7 +18,7 @@ export default async function populate(req: any, res: any) {
         comStyle: 0,
         totalReviews: 0,
         lastUpdated: Timestamp.now().toDate().toString(),
-        NIM: NIM + i,
+        NIM: (NIM + i).toString(),
       },
       { merge: true }
     );
