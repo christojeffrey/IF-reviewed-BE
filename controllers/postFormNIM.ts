@@ -1,8 +1,11 @@
-import { getDB } from "../helper";
+import { getDB, getFirebaseAuth } from "../helper";
 const { Timestamp } = require("firebase-admin/firestore");
 
 export default async function postFormNIM(req: any, res: any) {
   // setup
+  // get auth header
+  const authHeader = req.headers.authorization;
+  console.log("authHeader", authHeader);
   const NIM = req.body.NIM;
   const reviewerID = req.body.reviewerID;
   let NewReview: any = {
@@ -10,7 +13,21 @@ export default async function postFormNIM(req: any, res: any) {
     rating: req.body.rating,
     timeStamp: Timestamp.now().toDate().toString(),
   };
-  console.log(NIM, reviewerID, NewReview);
+  console.log(NIM, reviewerID, NewReview, authHeader);
+
+  // validate authHeader
+  if (!authHeader) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
+  const idToken = authHeader.split(" ")[1];
+  const { auth } = getFirebaseAuth();
+  const decodedToken = await auth.verifyIdToken(idToken);
+  console.log("decodedToken", decodedToken);
+  if (decodedToken.uid !== reviewerID) {
+    res.status(401).send("Unauthorized");
+    return;
+  }
 
   // at this point, the data is valid
   const { db } = getDB();

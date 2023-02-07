@@ -1,3 +1,3 @@
-import getDB from "./db";
+import { getDB, getFirebaseAuth } from "./firebase";
 
-export { getDB };
+export { getDB, getFirebaseAuth };

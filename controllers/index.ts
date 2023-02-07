@@ -4,4 +4,5 @@ import postFormNIM from "./postFormNIM";
 import populate from "./populate";
 import getRandom from "./getRandom";
 import getSearch from "./getSearch";
-export { getHello, getNIM, postFormNIM, populate, getRandom, getSearch };
+import getReview from "./getReview";
+export { getHello, getNIM, postFormNIM, populate, getRandom, getSearch, getReview };

@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import bodyParser from "body-parser";
-import { getNIM, getHello, postFormNIM, populate, getRandom, getSearch } from "../controllers";
+import { getNIM, getHello, postFormNIM, populate, getRandom, getSearch, getReview } from "../controllers";
 import cors from "cors";
 
 const app = require("express")();
@@ -27,5 +27,6 @@ app.post("/api/form/:NIM", jsonParser, postFormNIM);
 app.post("/api/users/populate", allowCors(populate));
 app.get("/api/users/random", allowCors(getRandom));
 app.get("/api/users/search", allowCors(getSearch));
+app.get("/api/users/review/:NIM/:UID", allowCors(getReview));
 
 module.exports = app;

@@ -1,6 +1,6 @@
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
-
+const { getAuth } = require("firebase-admin/auth");
 function initialize() {
   initializeApp({
     credential: cert({
@@ -19,7 +19,7 @@ function initialize() {
 }
 let isInitialized = false;
 
-export default function getDB() {
+export function getDB() {
   // initialize if not yet initialized
   if (!isInitialized) {
     initialize();
@@ -28,4 +28,15 @@ export default function getDB() {
 
   const db = getFirestore();
   return { db };
+}
+
+export function getFirebaseAuth() {
+  // initialize if not yet initialized
+  if (!isInitialized) {
+    initialize();
+    isInitialized = true;
+  }
+
+  const auth = getAuth();
+  return { auth };
 }

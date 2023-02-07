@@ -4,7 +4,7 @@ const { Timestamp } = require("firebase-admin/firestore");
 export default async function populate(req: any, res: any) {
   // setup
   const NIM = 13520000;
-  const name = "";
+  const name = "Joko Anwar";
 
   const { db } = getDB();
   const batch = db.batch();
