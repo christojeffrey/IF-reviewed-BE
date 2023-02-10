@@ -2,8 +2,8 @@ import { getDB } from "../helper";
 
 export default async function getRandom(req: any, res: any) {
   // setup
-  //   get amount from url query. if not specified, default to 2
-  const amount = req.query.amount ? parseInt(req.query.amount) : 2;
+  //   get amount from url query. if not specified, default to 20
+  const amount = req.query.amount ? parseInt(req.query.amount) : 20;
 
   // at this point, the data is valid
   const { db } = getDB();
