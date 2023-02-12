@@ -45,52 +45,115 @@ export default async function postFormNIM(req: any, res: any) {
   const { db } = getDB();
   const reviewRef = db.collection("users").doc(NIM).collection("reviews").doc(reviewerID);
 
+  // determine if this review is new or updating an existing review
+  const reviewSnapshot = await reviewRef.get();
+  let isUpdate = false;
+  let oldReview;
+  if (reviewSnapshot.exists) {
+    isUpdate = true;
+    oldReview = reviewSnapshot.data();
+  }
+
   // add the review
   reviewRef.set(NewReview, { merge: true });
 
+  // ---
   // update the review summary field
   const reviewSummaryRef = db.collection("users").doc(NIM);
   const reviewSummarySnapshot = await reviewSummaryRef.get();
-  const reviewsSnapshot = await reviewSummarySnapshot.ref.collection("reviews").get();
 
-  const reviewSummary = reviewSummarySnapshot.data();
-  const reviews = reviewsSnapshot.docs.map((doc: any) => doc.data());
+  const OldReviewSummary = reviewSummarySnapshot.data();
 
-  console.log("reviewSummary", reviewSummary);
-  console.log("reviews", reviews);
+  console.log("OldReviewSummary", OldReviewSummary);
+
   // recount rating and comstyle. com style is determined by the majority of the comStyle
-  let totalRating = 0;
-  let comStyleCount: any = {};
-  let totalReviews = reviews.length;
-  reviews.forEach((review: any) => {
-    totalRating += review.rating;
-    if (comStyleCount[review.comStyle]) {
-      comStyleCount[review.comStyle] += 1;
+  // ---
+  // new way
+  const newComStyleDetail = OldReviewSummary.comStyleDetail ? OldReviewSummary.comStyleDetail : {};
+  // update it. if not new review, subtract old value and add new value first, then update the value
+  console.log("newComStyleDetail", newComStyleDetail);
+  console.log("oldReview", oldReview);
+  if (isUpdate) {
+    // if value is not 1, subtract 1. if not, remove the key
+    if (newComStyleDetail[oldReview.comStyle] > 1) {
+      newComStyleDetail[oldReview.comStyle] -= 1;
     } else {
-      comStyleCount[review.comStyle] = 1;
-    }
-  });
-  let comStyle: string = reviewSummary.comStyle;
-  let maxCount = 0;
-  for (let key in comStyleCount) {
-    if (comStyleCount[key] > maxCount) {
-      comStyle = key;
-      maxCount = comStyleCount[key];
+      delete newComStyleDetail[oldReview.comStyle];
     }
   }
-  const updatedValue = {
-    rating: (totalRating / totalReviews).toFixed(2),
-    comStyle: comStyle,
-    comStyleDetail: comStyleCount,
-    totalReviews: totalReviews,
+
+  // add new value
+  if (newComStyleDetail[NewReview.comStyle]) {
+    newComStyleDetail[NewReview.comStyle] += 1;
+  } else {
+    newComStyleDetail[NewReview.comStyle] = 1;
+  }
+
+  // update comStyle
+  let newComStyle: string = OldReviewSummary.comStyle ? OldReviewSummary.comStyle : "1";
+  let newMaxCount = 0;
+  for (let key in newComStyleDetail) {
+    if (newComStyleDetail[key] > newMaxCount) {
+      newComStyle = key;
+      newMaxCount = newComStyleDetail[key];
+    }
+  }
+  // update new totalRating
+  let newTotalRating: number;
+  // handling if attribute is not exist
+  if (OldReviewSummary.totalRating) {
+    newTotalRating = OldReviewSummary.totalRating;
+    if (isUpdate) {
+      newTotalRating = newTotalRating - oldReview.rating;
+    }
+    newTotalRating = newTotalRating + NewReview.rating;
+  } else {
+    newTotalRating = await excessiveGetTotalRating(db, NIM);
+  }
+  // if update, subtract old value first
+
+  // update new totalReviews
+  let newTotalReviews: number = OldReviewSummary.totalReviews ? OldReviewSummary.totalReviews : 0;
+  // if update, subtract old value first
+  if (isUpdate) {
+    newTotalReviews = newTotalReviews - 1;
+  }
+  newTotalReviews = newTotalReviews + 1;
+
+  // update new rating
+  const newRating = parseFloat((newTotalRating / newTotalReviews).toFixed(2));
+
+  const newUpdatedValue = {
+    NIM: OldReviewSummary.NIM,
+    name: OldReviewSummary.name,
+    totalRating: newTotalRating,
+    rating: newRating,
+    comStyle: newComStyle,
+    comStyleDetail: newComStyleDetail,
+    totalReviews: newTotalReviews,
     lastUpdated: Timestamp.now().toDate().toString(),
   };
-  console.log("updatedValue", updatedValue);
+  console.log("newUpdatedValue", newUpdatedValue);
 
   // update the review summary
-  reviewSummaryRef.set(updatedValue, { merge: true });
+  reviewSummaryRef.set(newUpdatedValue);
 
   res.send({
     status: "success",
   });
+}
+
+// this function is bad interms of performance. it needs to read all the reviews
+async function excessiveGetTotalRating(db: any, NIM: any) {
+  const reviewSummaryRef = db.collection("users").doc(NIM);
+  const reviewSummarySnapshot = await reviewSummaryRef.get();
+  const reviewsSnapshot = await reviewSummarySnapshot.ref.collection("reviews").get();
+
+  const reviews = reviewsSnapshot.docs.map((doc: any) => doc.data());
+
+  let totalRating = 0;
+  reviews.forEach((review: any) => {
+    totalRating += review.rating;
+  });
+  return totalRating;
 }

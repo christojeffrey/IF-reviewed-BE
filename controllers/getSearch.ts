@@ -22,5 +22,10 @@ export default async function getSearch(req: any, res: any) {
     }
   });
 
+  // limit to 20 if more than 20
+  if (respond.length > 20) {
+    respond.length = 20;
+  }
+
   res.send(respond);
 }
