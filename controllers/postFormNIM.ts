@@ -13,11 +13,23 @@ export default async function postFormNIM(req: any, res: any) {
     rating: req.body.rating,
     timeStamp: Timestamp.now().toDate().toString(),
   };
-  console.log(NIM, reviewerID, NewReview, authHeader);
+  console.log("NewReview");
+  console.log(NIM, NewReview);
 
   // validate authHeader
   if (!authHeader) {
     res.status(401).send("Unauthorized");
+    return;
+  }
+
+  // validate new review
+  // com style is string '1' to '4', rating is number 1 to 5
+  if (typeof NewReview.comStyle !== "string" || typeof NewReview.rating !== "number") {
+    res.status(400).send("Bad Request");
+    return;
+  }
+  if (NewReview.comStyle.length !== 1 || NewReview.comStyle < "1" || NewReview.comStyle > "4") {
+    res.status(400).send("Bad Request");
     return;
   }
   const idToken = authHeader.split(" ")[1];
@@ -77,5 +89,7 @@ export default async function postFormNIM(req: any, res: any) {
   // update the review summary
   reviewSummaryRef.set(updatedValue, { merge: true });
 
-  res.send({});
+  res.send({
+    status: "success",
+  });
 }
