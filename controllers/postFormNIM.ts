@@ -79,8 +79,9 @@ export default async function postFormNIM(req: any, res: any) {
     }
   }
   const updatedValue = {
-    rating: totalRating / totalReviews,
+    rating: (totalRating / totalReviews).toFixed(2),
     comStyle: comStyle,
+    comStyleDetail: comStyleCount,
     totalReviews: totalReviews,
     lastUpdated: Timestamp.now().toDate().toString(),
   };
