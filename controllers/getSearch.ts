@@ -16,13 +16,16 @@ export default async function getSearch(req: any, res: any) {
   const userToBeRetrieved: any = [];
 
   studentData.forEach((val, key) => {
-    if (
-      key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      val.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
+    if (key.toLowerCase().includes(searchQuery.toLowerCase()) || val.toLowerCase().includes(searchQuery.toLowerCase())) {
       userToBeRetrieved.push(key);
     }
   });
+
+  // if userToBeRetrieved is empty, return empty array
+  if (userToBeRetrieved.length === 0) {
+    res.send([]);
+    return;
+  }
 
   // Limit the userToBeRetrieved to 10
   if (userToBeRetrieved.length > 10) {
@@ -32,9 +35,7 @@ export default async function getSearch(req: any, res: any) {
   const respond: any = [];
   const usersRef = db.collection("users");
   //   get any user with name or NIM that contains searchQuery
-  const snapshot = await usersRef
-    .where(firestore.FieldPath.documentId(), "in", userToBeRetrieved)
-    .get();
+  const snapshot = await usersRef.where(firestore.FieldPath.documentId(), "in", userToBeRetrieved).get();
 
   snapshot.forEach((doc: any) => {
     respond.push(doc.data());
