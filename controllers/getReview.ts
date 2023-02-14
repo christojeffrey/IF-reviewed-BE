@@ -26,8 +26,11 @@ export default async function getReview(req: any, res: any) {
     .collection("reviews")
     .doc(UID);
   const review = await reviewRef.get();
-  if (!review.exists) {``
-    res.json({ error: "review doesn't exist" }).status(404);
+  if (!review.exists) {
+    const data: any = {};
+    data["name"] = studentData.get(NIM);
+    console.log(data);
+    res.json({ error: "review doesn't exist", data }).status(404);
   } else {
     const data = review.data();
     data["name"] = studentData.get(NIM);
