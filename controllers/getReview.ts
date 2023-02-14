@@ -1,4 +1,5 @@
 import { getDB, getFirebaseAuth } from "../helper";
+import studentData from "../helper/studentData";
 const { Timestamp } = require("firebase-admin/firestore");
 
 export default async function getReview(req: any, res: any) {
@@ -19,12 +20,17 @@ export default async function getReview(req: any, res: any) {
   }
 
   const { db } = getDB();
-  const reviewRef = db.collection("users").doc(NIM).collection("reviews").doc(UID);
+  const reviewRef = db
+    .collection("users")
+    .doc(NIM)
+    .collection("reviews")
+    .doc(UID);
   const review = await reviewRef.get();
-  if (!review.exists) {
+  if (!review.exists) {``
     res.json({ error: "review doesn't exist" }).status(404);
   } else {
     const data = review.data();
+    data["name"] = studentData.get(NIM);
     res.json({ data });
   }
 }
