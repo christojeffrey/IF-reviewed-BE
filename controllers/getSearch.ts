@@ -1,4 +1,6 @@
 import { getDB } from "../helper";
+import studentData from "../helper/studentData";
+import { firestore } from "firebase-admin";
 
 export default async function getSearch(req: any, res: any) {
   // setup
@@ -10,22 +12,33 @@ export default async function getSearch(req: any, res: any) {
   // at this point, the data is valid
   const { db } = getDB();
 
-  const usersRef = db.collection("users");
-  //   get any user with name or NIM that contains searchQuery
-  const snapshot = await usersRef.get();
+  // TODO: Ubah for each ke data olahan (Array of NIMS)
+  const userToBeRetrieved: any = [];
 
-  const respond: any = [];
-  snapshot.forEach((doc: any) => {
-    //  filter. make in case insensitive
-    if (doc.data().name.toLowerCase().includes(searchQuery.toLowerCase()) || doc.data().NIM.toLowerCase().includes(searchQuery.toLowerCase())) {
-      respond.push(doc.data());
+  studentData.forEach((val, key) => {
+    if (
+      key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      val.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      userToBeRetrieved.push(key);
     }
   });
 
-  // limit to 20 if more than 20
-  if (respond.length > 20) {
-    respond.length = 20;
+  // Limit the userToBeRetrieved to 10
+  if (userToBeRetrieved.length > 10) {
+    userToBeRetrieved.length = 10;
   }
+
+  const respond: any = [];
+  const usersRef = db.collection("users");
+  //   get any user with name or NIM that contains searchQuery
+  const snapshot = await usersRef
+    .where(firestore.FieldPath.documentId(), "in", userToBeRetrieved)
+    .get();
+
+  snapshot.forEach((doc: any) => {
+    respond.push(doc.data());
+  });
 
   res.send(respond);
 }
